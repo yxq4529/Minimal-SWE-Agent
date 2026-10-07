@@ -2,12 +2,30 @@ import os
 import glob
 
 def read_file(file_path: str, cwd: str = ".") -> str:
+    """读取文件内容。包含大文件截断保护机制。"""
     full_path = os.path.join(cwd, file_path)
     if not os.path.exists(full_path):
         return f"[Error: File '{file_path}' does not exist]"
+        
     try:
+        # 使用 errors="replace" 防止遇到非 utf-8 编码文件（如图片/二进制的误读）报错
         with open(full_path, "r", encoding="utf-8", errors="replace") as f:
-            return f.read()
+            lines = f.readlines()
+            
+        MAX_LINES = 500
+        
+        if len(lines) > MAX_LINES:
+            truncated_content = "".join(lines[:MAX_LINES])
+            warning_msg = (
+                f"\n\n... [Warning: File truncated. The file has {len(lines)} lines, "
+                f"but only the first {MAX_LINES} are shown to prevent context overflow. "
+                f"Please use `execute_bash` with `grep -n <keyword>` or `sed -n '<start>,<end>p'` "
+                f"to inspect specific sections.]"
+            )
+            return truncated_content + warning_msg
+            
+        return "".join(lines)
+        
     except Exception as e:
         return f"[Error reading file: {str(e)}]"
 
