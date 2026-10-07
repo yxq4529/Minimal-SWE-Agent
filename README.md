@@ -18,6 +18,8 @@ Most existing agentic frameworks abstract away the underlying mechanics of LLM t
    Continuous terminal errors or reading large files can quickly exceed the LLM's context window. This agent implements a Sliding Window Context Manager that permanently anchors the System Prompt and initial task, while truncating older tool-call histories (keeping only the latest `N` steps).
 2. **Mitigating Infinite Loops:**
    Incorporates a strict `max_steps` threshold and an intervention mechanism. If the model idles or repeatedly fails without triggering tools, the system forcibly injects a prompt to break the loop or terminate.
+3. **Safe Exploration & Large File Truncation:**
+   Navigating real-world repositories (e.g., accidentally grepping `node_modules` or reading a 20k-line `package-lock.json`) can instantly crash an LLM's context window. This agent enforces strict search exclusion rules via the System Prompt and implements a hard-limit truncation in the `read_file` tool. If a file is too large, the agent intercepts it, throws a warning, and forces the model to fallback to targeted bash commands (like `grep -n` or `sed`) to inspect specific sections.
 
 ## 📸 Demo
 
@@ -79,6 +81,8 @@ Most existing agentic frameworks abstract away the underlying mechanics of LLM t
    连续的终端报错或读取超大文件会迅速耗尽 LLM 的上下文窗口。本项目实现了一个“滑动窗口”上下文管理器：永久锁定 System Prompt 和初始 User Task，同时动态截断早期的工具调用历史（仅保留最近的 `N` 轮对话）。
 2. **阻断无限死循环:**
    引入了严格的 `max_steps` 阈值和强制干预机制。当模型陷入停滞、发呆或反复报错却不触发新工具时，系统会强制向上下文注入干预指令，打破死循环或安全终止程序。
+3. **安全检索与大文件截断保护:**
+   在真实的庞大工程中（如全局误搜 `node_modules` 或全量读取几万行的压缩代码），极易瞬间撑爆大模型的上下文。本项目通过 System Prompt 强制建立搜索隔离区（黑名单），并在 `read_file` 工具层引入硬性行数截断机制与警告反馈。当遇到巨型文件时，系统会主动拦截并倒逼大模型改用 `grep -n` 或 `sed` 等精确定位命令来代替全量读取，完美兼顾了探索能力与 API 成本控制。
 
 ## 📸 运行演示
 
